@@ -61,7 +61,7 @@ export VLLM_METAL_ENABLE_PROFILING=1
 
 # Run vLLM
 python -m vllm.entrypoints.openai.api_server \
-    --model meta-llama/Llama-2-7b-hf \
+    --model HuggingFaceTB/SmolLM2-135M-Instruct \
     --dtype float16
 ```
 
