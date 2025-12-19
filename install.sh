@@ -127,15 +127,7 @@ main() {
     exit 1
   fi
 
-  # Create virtual environment with Python 3.12 or 3.13 (3.14+ not yet supported)
-  echo ""
-  section "Setting up Python environment"
-  if [ ! -d ".venv" ]; then
-    uv venv .venv --python 3.12
-  fi
-
-  # shellcheck source=/dev/null
-  source .venv/bin/activate
+  ensure_venv
 
   local release_data
   release_data=$(fetch_latest_release "$repo_owner" "$repo_name")

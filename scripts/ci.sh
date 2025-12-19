@@ -1,8 +1,6 @@
 #!/bin/bash
 
 smoke_test() {
-  ./install.sh
-
   # 1. Start vLLM in the background
   vllm serve Qwen/Qwen3-0.6B &
     
