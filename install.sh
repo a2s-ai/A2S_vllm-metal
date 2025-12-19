@@ -68,82 +68,24 @@ download_and_install_wheel() {
 
   success "Downloaded wheel"
 
-  # Install vllm-metal base package first
+  # Install vllm-metal package
   if ! uv pip install --upgrade "$wheel_path"; then
     error "Failed to install ${package_name}."
     exit 1
   fi
 
-  # Install vllm separately with --no-deps to avoid pulling in CUDA dependencies
-  # that don't work on macOS/Apple Silicon
+  success "Installed ${package_name}"
+
+  # Install vllm with VLLM_TARGET_DEVICE=empty to skip native extension builds.
+  # vllm-metal replaces the backend with MLX, so native CUDA/CPU extensions aren't needed.
   echo ""
-  echo "Installing vllm (without CUDA dependencies)..."
-  if ! uv pip install --upgrade --no-deps vllm; then
+  echo "Installing vllm (skipping native extensions for Metal backend)..."
+  if ! VLLM_TARGET_DEVICE=empty uv pip install --upgrade vllm; then
     error "Failed to install vllm."
     exit 1
   fi
 
-  # Install vllm's macOS-compatible dependencies
-  if ! uv pip install --upgrade \
-    msgspec \
-    cloudpickle \
-    prometheus-client \
-    fastapi \
-    uvicorn \
-    uvloop \
-    pydantic \
-    pillow \
-    prometheus_fastapi_instrumentator \
-    tiktoken \
-    lm-format-enforcer \
-    outlines \
-    typing_extensions \
-    filelock \
-    py-cpuinfo \
-    aiohttp \
-    openai \
-    einops \
-    importlib_metadata \
-    mistral_common \
-    pyyaml \
-    requests \
-    tqdm \
-    sentencepiece \
-    compressed-tensors \
-    gguf \
-    partial-json-parser \
-    blake3 \
-    cbor2 \
-    pyzmq \
-    cachetools \
-    regex \
-    protobuf \
-    python-multipart \
-    "fastapi[standard]" \
-    "llguidance>=1.3.0,<1.4.0" \
-    "outlines_core==0.2.11" \
-    "lark==1.2.2" \
-    "xgrammar>=0.1.27" \
-    "opencv-python-headless>=4.11.0" \
-    six \
-    "setuptools>=77.0.3,<81.0.0" \
-    "depyf>=0.20.0" \
-    watchfiles \
-    python-json-logger \
-    scipy \
-    ninja \
-    pybase64 \
-    setproctitle \
-    mlx \
-    mlx-lm \
-    "openai-harmony>=0.0.3" \
-    "anthropic>=0.71.0" \
-    "model-hosting-container-standards>=0.1.9,<1.0.0" \
-    "tokenizers>=0.21.1" \
-    "numba>=0.61.0"; then
-    error "Failed to install vllm dependencies."
-    exit 1
-  fi
+  success "Installed vllm"
 }
 
 main() {
@@ -184,6 +126,16 @@ main() {
   if ! ensure_uv; then
     exit 1
   fi
+
+  # Create virtual environment with Python 3.12 or 3.13 (3.14+ not yet supported)
+  echo ""
+  section "Setting up Python environment"
+  if [ ! -d ".venv" ]; then
+    uv venv .venv --python 3.12
+  fi
+
+  # shellcheck source=/dev/null
+  source .venv/bin/activate
 
   local release_data
   release_data=$(fetch_latest_release "$repo_owner" "$repo_name")
